@@ -26,6 +26,7 @@ class Curl {
         "ssl_verifypeer" => true,
         "verbose" => false
     );
+    private $baseUrl = '';
 
     protected function __construct(array $curlOptions = array()) {
 
@@ -64,6 +65,8 @@ class Curl {
     }
 
     private function execute($method, $url, array $headers = array()) {
+        $url = $this->baseUrl . $url;
+
         curl_setopt($this->curlObject, CURLOPT_URL, $url);
         curl_setopt($this->curlObject, CURLOPT_POST, false);
         curl_setopt($this->curlObject, CURLOPT_CUSTOMREQUEST, $method);
@@ -99,6 +102,10 @@ class Curl {
 
     protected function getCurlInfo($curl_option) {
         return curl_getinfo($this->curlObject, $curl_option);
+    }
+
+    public function setBaseUrl($baseUrl){
+        $this-> baseUrl = $baseUrl;
     }
 
     protected function close() {
