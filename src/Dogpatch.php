@@ -141,12 +141,10 @@ class Dogpatch extends Curl {
     }
 
     public function assertBody($assertedBody, $useRegularExpression = false) {
-        if (empty($this->body)) {
-            $this->body = substr($this->response, $this->getCurlInfo(CURLINFO_HEADER_SIZE));
-        }
+        $body = $this->prepareBody();
 
         if ($assertedBody === IS_EMPTY) {
-            if ($this->body === false || $this->body === "") {
+            if ($body === false || $body === "") {
                 return $this;
             } else {
                 throw new \Exception("Response body is not empty.");
@@ -154,19 +152,21 @@ class Dogpatch extends Curl {
         }
 
         if ($assertedBody === IS_VALID_JSON) {
-            if (json_decode($this->body === null)) {
+            if (json_decode($body === null)) {
                 throw new \Exception("Response body is invalid JSON.");
             }
 
             return $this;
         }
 
+        $body = $this->prepareBody(true, true);
+
         if ($useRegularExpression) {
-            if (!@preg_match($assertedBody, $this->body)) {
+            if (!@preg_match($assertedBody, $body)) {
                 throw new \Exception("Asserted body '$assertedBody' does not match response body of '$this->body'.");
             }
         } else {
-            if (strpos($assertedBody, $this->body)) {
+            if (strpos($assertedBody, $body)) {
                 throw new \Exception("Asserted body '$assertedBody' does not equal response body of '$this->body'.");
             }
         }
@@ -175,11 +175,9 @@ class Dogpatch extends Curl {
     }
 
     public function assertBodyPhp($asserted, $onNotEqualVarExport = false) {
-        if (empty($this->body)) {
-            $this->body = substr($this->response, $this->getCurlInfo(CURLINFO_HEADER_SIZE));
-        }
+        $body = $this->prepareBody();
 
-        $body = json_decode($this->body);
+        $body = json_decode($body);
 
         if ($body === null) {
             throw new \Exception("Response body is invalid JSON.");
@@ -189,7 +187,7 @@ class Dogpatch extends Curl {
             $errorMessage = "Asserted body does not equal response body.";
             if ($onNotEqualVarExport) {
                 $errorMessage .= "\n\n--------------- ASSERTED BODY ---------------\n" . var_export($asserted, true) .
-                                 "\n\n--------------- RESPONSE BODY ---------------\n" . var_export($body, true) . "\n\n";
+                    "\n\n--------------- RESPONSE BODY ---------------\n" . var_export($body, true) . "\n\n";
             }
             throw new \Exception($errorMessage);
         }
@@ -207,27 +205,45 @@ class Dogpatch extends Curl {
             throw new \Exception("Asserted JSON file is invalid JSON.");
         }
 
-        if (empty($this->body)) {
-            $this->body = substr($this->response, $this->getCurlInfo(CURLINFO_HEADER_SIZE));
-        }
+        $body = $this->prepareBody();
 
-        if (json_decode($this->body) === null) {
+        if (json_decode($body) === null) {
             throw new \Exception("Response body is invalid JSON.");
         }
 
         $asserted = pretty_print_json($asserted);
-        $body = pretty_print_json($this->body);
+        $bodyDump = pretty_print_json($body);
 
-        if ($asserted != $body) {
+        if ($asserted != $bodyDump) {
             $errorMessage = "Asserted JSON file does not equal response body.";
             if ($onNotEqualPrintJson) {
                 $errorMessage .= "\n\n--------------- ASSERTED JSON FILE ---------------\n" . $asserted .
-                                 "\n\n--------------- RESPONSE BODY ---------------\n" . $body . "\n\n";
+                    "\n\n--------------- RESPONSE BODY ---------------\n" . $bodyDump . "\n\n";
             }
             throw new \Exception($errorMessage);
         }
 
         return $this;
+    }
+
+    protected function prepareBody($stripNewLines = true, $stripSlashes = true) {
+        if (empty($this->body)) {
+            $this->body = substr($this->response, $this->getCurlInfo(CURLINFO_HEADER_SIZE));
+        }
+
+        $body = $this->body;
+
+        // skipping backslashes
+        if ($body !== false && $stripSlashes) {
+            $body = stripcslashes($body);
+        }
+
+        //skipping new lines
+        if ($body !== false && $stripNewLines) {
+            $body = str_replace(array("\r\n", "\n"), '', $this->body);
+        }
+
+        return $body;
     }
 
     public function close() {
