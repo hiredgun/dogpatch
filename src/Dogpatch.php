@@ -240,7 +240,7 @@ class Dogpatch extends Curl {
 
         //skipping new lines
         if ($body !== false && $stripNewLines) {
-            $body = str_replace(array("\r\n", "\n"), '', $this->body);
+            $body = str_replace(array("\r\n", "\n"), '', $body);
         }
 
         return $body;
