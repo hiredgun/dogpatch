@@ -45,7 +45,7 @@ class Dogpatch extends Curl {
         return $this;
     }
 
-    public function post($url, array $postData = array(), array $headers = array()) {
+    public function post($url, $postData, array $headers = array()) {
         $this->unsetClassVars();
         $this->response = $this->postRequest($url, $postData, $headers);
 

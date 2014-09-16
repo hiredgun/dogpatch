@@ -68,7 +68,6 @@ class Curl {
         $url = $this->baseUrl . $url;
 
         curl_setopt($this->curlObject, CURLOPT_URL, $url);
-        curl_setopt($this->curlObject, CURLOPT_POST, false);
         curl_setopt($this->curlObject, CURLOPT_CUSTOMREQUEST, $method);
 
         if (!empty($headers)) {
@@ -82,7 +81,7 @@ class Curl {
        return $this->execute('GET', $url, $headers);
     }
 
-    protected function postRequest($url, array $postData = array(), array $headers = array()) {
+    protected function postRequest($url, $postData, array $headers = array()) {
         curl_setopt($this->curlObject, CURLOPT_POSTFIELDS, $postData);
 
         return $this->execute('POST', $url, $headers);
