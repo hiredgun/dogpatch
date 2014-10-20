@@ -17,6 +17,8 @@ namespace Dogpatch;
 # limitations under the License.
 */
 
+use Dogpatch\Validators\Validator;
+
 require_once(__DIR__ . '/Util.php');
 
 define("IS_VALID_JSON", "IS_VALID_JSON");
@@ -220,6 +222,38 @@ class Dogpatch extends Curl {
                 $errorMessage .= "\n\n--------------- ASSERTED JSON FILE ---------------\n" . $asserted .
                     "\n\n--------------- RESPONSE BODY ---------------\n" . $bodyDump . "\n\n";
             }
+            throw new \Exception($errorMessage);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Checks response fields
+     *
+     * @param $validators
+     * @throws \Exception
+     * @internal param bool $onNotEqualVarExport
+     * @internal param $asserted
+     * @return $this
+     */
+    public function assertBodyFields($validators) {
+        $body = $this->prepareBody();
+
+        $body = json_decode($body, true);
+
+        if ($body === null) {
+            throw new \Exception('Response body is invalid JSON.');
+        }
+
+        $validator = new Validator();
+        $validator->setData($body);
+        $validator->setValidators($validators);
+
+        if (!$validator->isValid()) {
+            $errorMessage = 'Asserted body does not equal response body.' . PHP_EOL;
+            $errorMessage .= var_export($validator->getMessages(), true) . PHP_EOL;
+            $errorMessage .= '\n\n--------------- RESPONSE BODY ---------------\n' . var_export($body, true) . PHP_EOL;
             throw new \Exception($errorMessage);
         }
 
