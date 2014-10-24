@@ -18,6 +18,21 @@ class Validator {
     const OPTIONAL = 4;
 
     /**
+     * Error key
+     */
+    const ERROR = 'errors';
+
+    /**
+     * Missing field key
+     */
+    const MISSING_FIELDS = 'missingFields';
+
+    /**
+     * Missing validator key
+     */
+    const MISSING_VALIDATORS = 'missingValidators';
+
+    /**
      * Array of message
      *
      * @var array
@@ -66,22 +81,14 @@ class Validator {
                 $config = (is_int($key)) ? $validationConfigs:$validationConfigs[$key];
                 $this->apply($key, $value, $config, $validationKey);
             } else {
-                if (isset($validationKey)) {
-                    $this->messages['missingValidators'][$validationKey][] = $key;
-                } else {
-                    $this->messages['missingValidators'][] = $key;
-                }
+                $this->addMessage('', $key, $validationKey, self::MISSING_VALIDATORS);
             }
         }
 
         $missingVields = array_diff_key($validationConfigs, $data);
         foreach ($missingVields as $key => $validator) {
             if (isset($validator['options']) && !($validator['options'] & self::OPTIONAL)) {
-                if (isset($validationKey)) {
-                    $this->messages['missingFields'][$validationKey][] = $key;
-                } else {
-                    $this->messages['missingFields'][] = $key;
-                }
+                $this->addMessage('', $key, $validationKey, self::MISSING_FIELDS);
             }
         }
     }
@@ -106,18 +113,18 @@ class Validator {
                     $validator = InputValidatorsFactory::create($validatorConfig);
                     $result = $validator->isValid($value);
                     if (!$result) {
-                        if (isset($validationKey)) {
-                            $this->messages['errors'][$validationKey][] = $key . ': ' . $validator->getMessage();
-                        } else {
-                            $this->messages['errors'][] = $key . ': ' . $validator->getMessage();
-                        }
+                        $this->addMessage($validator->getMessage(), $key, $validationKey, self::ERROR);
                     }
                 }
             }
 
             if (isset($validationConfig['subEntity'])) {
-                $newValidationKey = ($validationKey) ? $validationKey . ':' . $key : $key;
-                $this->validate($value, $validationConfig['subEntity'], $newValidationKey);
+                if (is_array($value)) {
+                    $newValidationKey = ($validationKey) ? $validationKey . ':' . $key : $key;
+                    $this->validate($value, $validationConfig['subEntity'], $newValidationKey);
+                } else {
+                    $this->addMessage('Subentity expected, ' . gettype($value) . ' given', $key, $validationKey, self::ERROR);
+                }
             }
         }
 
@@ -140,5 +147,22 @@ class Validator {
      */
     public function setValidators($validators) {
         $this->validators = $validators;
+    }
+
+    /**
+     * Adds message to messages haystack
+     *
+     * @param string $message
+     * @param string $key
+     * @param string $validationKey
+     * @param string $type
+     */
+    private function addMessage($message, $key, $validationKey, $type) {
+        $message = !empty($message) ? ': ' . $message : $message;
+        if (isset($validationKey)) {
+            $this->messages['missingValidators'][$validationKey][] = $key . $message;
+        } else {
+            $this->messages['missingValidators'][] = $key . $message;
+        }
     }
 }
