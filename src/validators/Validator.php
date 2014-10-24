@@ -89,7 +89,7 @@ class Validator {
     public function apply($key, $value, $validationConfig, $validationKey = null) {
         $result = false;
         if (is_callable($validationConfig)) {
-            $result = call_user_func($value);
+            $result = call_user_func($validationConfig, $value);
         } else {
             if (isset($validationConfig['options'])) {
                 if (is_null($value) && ($validationConfig['options'] & self::ALLOW_NULL)) {
