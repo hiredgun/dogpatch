@@ -10,7 +10,7 @@ class Validator {
     /**
      * Bit flag indicating whether value can be empty array
      */
-    const EMPTY_ARRAY = 2;
+    const ALLOW_EMPTY_ARRAY = 2;
 
     /**
      * Bit flag indicating whether value should be presented in a response
@@ -39,34 +39,6 @@ class Validator {
     private $data;
 
     /**
-     * List of unused validators
-     *
-     * @var array
-     */
-    private $unusedValidators;
-
-    /**
-     * List of errors
-     *
-     * @var array
-     */
-    private $errors;
-
-    /**
-     * List of missing validators
-     *
-     * @var array
-     */
-    private $missingValidators;
-
-    /**
-     * List of missing response fields
-     *
-     * @var array
-     */
-    private $missingFields;
-
-    /**
      * Performs validation
      *
      * @return bool
@@ -90,8 +62,9 @@ class Validator {
         }
 
         foreach ($data as $key => $value) {
-            if (isset($validationConfigs[$key])) {
-                $this->apply($key, $value, $validationConfigs[$key], $validationKey);
+            if (is_int($key) || isset($validationConfigs[$key])) {
+                $config = (is_int($key)) ? $validationConfigs:$validationConfigs[$key];
+                $this->apply($key, $value, $config, $validationKey);
             } else {
                 if (isset($validationKey)) {
                     $this->messages['missingValidators'][$validationKey][] = $key;
@@ -122,7 +95,7 @@ class Validator {
                 if (is_null($value) && ($validationConfig['options'] & self::ALLOW_NULL)) {
                     return true;
                 }
-                if (is_array($value) && empty($value) && ($validationConfig['options'] & self::EMPTY_ARRAY)) {
+                if (is_array($value) && empty($value) && ($validationConfig['options'] & self::ALLOW_EMPTY_ARRAY)) {
                     return true;
                 }
             }
