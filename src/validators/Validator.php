@@ -88,7 +88,8 @@ class Validator {
 
         $missingFields = array_diff_key($validationConfigs, $data);
         foreach ($missingFields as $key => $validator) {
-            if (isset($validator['options']) && !($validator['options'] & self::OPTIONAL)) {
+            if ((!isset($validator['options']) && $key != 'subEntity') ||
+                (isset($validator['options']) && !($validator['options'] & self::OPTIONAL))) {
                 $this->addMessage('', $key, $validationKey, self::MISSING_FIELDS);
             }
         }
