@@ -112,8 +112,10 @@ class Validator {
             }
 
             foreach ($validationConfig['validators'] as $validator) {
-                if (!$validator instanceof ValidatorInterface) {
+                if (!$validator instanceof ValidatorInterface && is_array($validator)) {
                     $validator = InputValidatorsFactory::create($validator);
+                } else {
+                    throw new \Exception('Invalid validator config for ' . $key . ', expected array ' . gettype($validator) . ' given');
                 }
 
                 /** @var ValidatorInterface $validator */
