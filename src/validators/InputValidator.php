@@ -35,7 +35,7 @@ abstract class InputValidator implements ValidatorInterface {
      *
      * @return array
      */
-    public function getMessage() {
+    public function getMessages() {
         return $this->message;
     }
 

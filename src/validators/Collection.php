@@ -23,7 +23,7 @@ class Collection extends InputValidator {
                 /** @var ValidatorInterface $validator */
                 $validator = InputValidatorsFactory::create($validatorConfig);
                 if (!$validator->isValid($value)) {
-                    $errors[] = 'Invalid item ' . $key . ': ' . $validator->getMessage();
+                    $errors[] = 'Invalid item ' . $key . ': ' . $validator->getMessages();
                 }
             }
         }

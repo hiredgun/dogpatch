@@ -3,7 +3,11 @@ namespace Dogpatch\Validators;
 
 class InputValidatorsFactory {
 
-    public static function create($validator) {
+    public static function create(array $validator) {
+        if (!isset($validator['name'])) {
+            throw new \Exception('Invalid validator definition, cannot find validator name');
+        }
+
         $class = __NAMESPACE__ . '\\' . $validator['name'];
         if (class_exists($class)) {
             $options = (isset($validator['options'])) ? $validator['options'] : null;
