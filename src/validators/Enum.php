@@ -18,10 +18,12 @@ class Enum extends InputValidator{
         $result = in_array($value, $this->options['haystack']);
 
         if (!$result) {
-            $this->setMessage('cannot find ' . $value . ' in haystack - allowed values: ' . $this->options['haystack']);
+            $allowedValue = implode(',', $this->options['haystack']);
+
+            $this->setMessage('cannot find "' . $value . '" value in haystack - allowed values: ' .
+                $allowedValue);
         }
 
         return $result;
-
     }
 }
