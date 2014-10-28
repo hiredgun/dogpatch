@@ -8,7 +8,7 @@ class Validator {
     const ALLOW_NULL = 1;
 
     /**
-     * Bit flag indicating whether value can be empty array
+     * Bit flag indicating whether value can be an empty array
      */
     const ALLOW_EMPTY_ARRAY = 2;
 
@@ -33,7 +33,7 @@ class Validator {
     const MISSING_VALIDATORS = 'missingValidators';
 
     /**
-     * Array of message
+     * Array of messages
      *
      * @var array
      */
@@ -74,7 +74,7 @@ class Validator {
      */
     private function validate(array $data, $validationConfigs, $validationKey = null) {
         if (!is_array($validationConfigs)) {
-            throw new \Exception('Array expected, ' . gettype($validationConfigs) . ' given');
+            throw new \InvalidArgumentException('Validation config must be array, ' . gettype($validationConfigs) . ' given');
         }
 
         foreach ($data as $key => $value) {
@@ -86,36 +86,28 @@ class Validator {
             }
         }
 
-        $missingFields = array_diff_key($validationConfigs, $data);
-        foreach ($missingFields as $key => $validator) {
-            if ((!isset($validator['options']) && $key != 'subEntity') ||
-                (isset($validator['options']) && !($validator['options'] & self::OPTIONAL))) {
-                $this->addMessage('', $key, $validationKey, self::MISSING_FIELDS);
-            }
-        }
+        $this->logMissingFields($validationConfigs, $data, $validationKey);
     }
 
-    public function apply($key, $value, $validationConfig, $validationKey = null) {
-        $result = false;
-        if (isset($validationConfig['options'])) {
-            if (is_null($value) && ($validationConfig['options'] & self::ALLOW_NULL)) {
-                return true;
-            }
-            if (is_array($value) && empty($value) && ($validationConfig['options'] & self::ALLOW_EMPTY_ARRAY)) {
-                return true;
-            }
-        }
-
+    /**
+     * Runs each validator against provided value
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param string $validationKey
+     * @throws \Exception
+     */
+    private function runValidators($key, $value, $validationKey) {
         if (isset($validationConfig['validators'])) {
             if (!is_array($validationConfig['validators'])) {
                 throw new \Exception('Invalid validaotrs definition for key ' . $key);
             }
 
             foreach ($validationConfig['validators'] as $validator) {
-                if (!$validator instanceof ValidatorInterface && is_array($validator)) {
+                if (is_array($validator)) {
                     $validator = InputValidatorsFactory::create($validator);
-                } else {
-                    throw new \Exception('Invalid validator config for ' . $key . ', expected array ' . gettype($validator) . ' given');
+                } elseif(!$validator instanceof ValidatorInterface) {
+                    throw new \Exception('Invalid validator config for ' . $key . ', expected array ' . gettype($validator) . ', given');
                 }
 
                 /** @var ValidatorInterface $validator */
@@ -125,35 +117,44 @@ class Validator {
                 }
             }
         }
+    }
 
+    /**
+     * Starts validation of subEntities
+     */
+    private function evaluateSubEntity($key, $value, $validationKey) {
         if (isset($validationConfig['subEntity'])) {
             if (is_array($value)) {
                 $newValidationKey = ($validationKey) ? $validationKey . ':' . $key : $key;
                 $this->validate($value, $validationConfig['subEntity'], $newValidationKey);
             } else {
-                $this->addMessage('subEentity expected, ' . gettype($value) . ' given', $key, $validationKey, self::ERROR);
+                $this->addMessage('subEntity expected, ' . gettype($value) . ' given', $key, $validationKey, self::ERROR);
             }
         }
-
-        return $result;
-    }
-
-    public function getMessages() {
-        return $this->messages;
-    }
-
-    public function setData($data) {
-        $this->data = $data;
     }
 
     /**
-     * Sets validators
+     * Applies given validator to its corresponding value
      *
-     * @param $validators
-     * @return mixed
+     * @param string $key
+     * @param mixed $value
+     * @param array $validationConfig
+     * @param null $validationKey
+     * @return bool
+     * @throws \Exception
      */
-    public function setValidators($validators) {
-        $this->validators = $validators;
+    public function apply($key, $value, $validationConfig, $validationKey = null) {
+        if (isset($validationConfig['options'])) {
+            if (is_null($value) && ($validationConfig['options'] & self::ALLOW_NULL)) {
+                return true;
+            }
+            if (is_array($value) && empty($value) && ($validationConfig['options'] & self::ALLOW_EMPTY_ARRAY)) {
+                return true;
+            }
+        }
+
+        $this->runValidators($key, $value, $validationKey);
+        $this->evaluateSubEntity($key, $value, $validationKey);
     }
 
     /**
@@ -171,5 +172,50 @@ class Validator {
         } else {
             $this->messages[$type][] = $key . $message;
         }
+    }
+
+    /**
+     * Logs fields not presented in a response
+     *
+     * @param array $validationConfigs
+     * @param array $data
+     * @param string $validationKey
+     */
+    private function logMissingFields($validationConfigs, $data, $validationKey) {
+        $missingFields = array_diff_key($validationConfigs, $data);
+        foreach ($missingFields as $key => $validator) {
+            if ((!isset($validator['options']) && $key != 'subEntity') ||
+                (isset($validator['options']) && !($validator['options'] & self::OPTIONAL))) {
+                $this->addMessage('', $key, $validationKey, self::MISSING_FIELDS);
+            }
+        }
+    }
+
+    /**
+     * Returns logged messages
+     *
+     * @return array
+     */
+    public function getMessages() {
+        return $this->messages;
+    }
+
+    /**
+     * Array of response fields
+     *
+     * @param array $data
+     */
+    public function setData($data) {
+        $this->data = $data;
+    }
+
+    /**
+     * Sets validators
+     *
+     * @param array $validators
+     * @return mixed
+     */
+    public function setValidators(array $validators) {
+        $this->validators = $validators;
     }
 }
