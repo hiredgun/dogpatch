@@ -1,6 +1,11 @@
 <?php
 namespace Dogpatch\Validators;
 
+/**
+ * Class Validator
+ *
+ * @package Dogpatch\Validators
+ */
 class Validator {
     /**
      * Bit flag indicating whether value can be null
@@ -97,7 +102,7 @@ class Validator {
      * @param string $validationKey
      * @throws \Exception
      */
-    private function runValidators($key, $value, $validationKey) {
+    private function runValidators($key, $value, $validationKey, $validationConfig) {
         if (isset($validationConfig['validators'])) {
             if (!is_array($validationConfig['validators'])) {
                 throw new \Exception('Invalid validaotrs definition for key ' . $key);
@@ -122,7 +127,7 @@ class Validator {
     /**
      * Starts validation of subEntities
      */
-    private function evaluateSubEntity($key, $value, $validationKey) {
+    private function evaluateSubEntity($key, $value, $validationKey, $validationConfig) {
         if (isset($validationConfig['subEntity'])) {
             if (is_array($value)) {
                 $newValidationKey = ($validationKey) ? $validationKey . ':' . $key : $key;
@@ -140,21 +145,20 @@ class Validator {
      * @param mixed $value
      * @param array $validationConfig
      * @param null $validationKey
-     * @return bool
      * @throws \Exception
      */
     public function apply($key, $value, $validationConfig, $validationKey = null) {
         if (isset($validationConfig['options'])) {
             if (is_null($value) && ($validationConfig['options'] & self::ALLOW_NULL)) {
-                return true;
+                return;
             }
             if (is_array($value) && empty($value) && ($validationConfig['options'] & self::ALLOW_EMPTY_ARRAY)) {
-                return true;
+                return;
             }
         }
 
-        $this->runValidators($key, $value, $validationKey);
-        $this->evaluateSubEntity($key, $value, $validationKey);
+        $this->runValidators($key, $value, $validationKey, $validationConfig);
+        $this->evaluateSubEntity($key, $value, $validationKey, $validationConfig);
     }
 
     /**
