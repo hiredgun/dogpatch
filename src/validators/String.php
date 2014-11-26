@@ -18,7 +18,7 @@ class String extends InputValidator {
         $result = is_string($value);
 
         if (!$result) {
-            $this->setMessage('string value expected ' . gettype($value) . ' given');
+            $this->setMessage('String value expected, ' . gettype($value) . ' given');
         }
 
         return $result;

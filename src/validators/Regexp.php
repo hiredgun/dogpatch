@@ -7,7 +7,6 @@ namespace Dogpatch\Validators;
  * @package Dogpatch\Validators
  */
 class Regexp extends InputValidator {
-
     /**
      * Performs validation
      *
@@ -22,7 +21,7 @@ class Regexp extends InputValidator {
         $result = (bool) preg_match($this->options['pattern'], $value);
 
         if (!$result) {
-            $this->setMessage('cannot find pattern: ' . $this->options['pattern']);
+            $this->setMessage('Cannot find pattern: ' . $this->options['pattern']);
         }
 
         return $result;

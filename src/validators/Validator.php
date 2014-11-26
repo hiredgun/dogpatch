@@ -83,8 +83,8 @@ class Validator {
         }
 
         foreach ($data as $key => $value) {
-            if (is_int($key) || isset($validationConfigs[$key])) {
-                $config = (is_int($key)) ? $validationConfigs : $validationConfigs[$key];
+            if ($valueIsCollection = is_int($key) || isset($validationConfigs[$key])) {
+                $config = ($valueIsCollection) ? $validationConfigs : $validationConfigs[$key];
                 $this->apply($key, $value, $config, $validationKey);
             } else {
                 $this->addMessage('', $key, $validationKey, self::MISSING_VALIDATORS);

@@ -1,6 +1,4 @@
 <?php
-
-
 namespace Dogpatch\Validators;
 
 /**
@@ -14,7 +12,7 @@ class Int extends InputValidator{
         $result = is_int($value);
 
         if (!$result) {
-            $this->setMessage('integer value expected ' . gettype($value) . ' given');
+            $this->setMessage('Integer value expected, ' . gettype($value) . ' given');
         }
 
         return $result;

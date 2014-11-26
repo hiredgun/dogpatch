@@ -12,7 +12,7 @@ class Bool extends InputValidator{
         $result = is_bool($value);
 
         if (!$result) {
-            $this->setMessage('boolean value expected ' . gettype($value) . ' given');
+            $this->setMessage('Boolean value expected, ' . gettype($value) . ' given');
         }
 
         return $result;

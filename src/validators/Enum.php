@@ -20,7 +20,7 @@ class Enum extends InputValidator{
         if (!$result) {
             $allowedValue = implode(',', $this->options['haystack']);
 
-            $this->setMessage('cannot find "' . $value . '" value in haystack - allowed values: ' .
+            $this->setMessage('Cannot find "' . $value . '" value in haystack - allowed values: ' .
                 $allowedValue);
         }
 
