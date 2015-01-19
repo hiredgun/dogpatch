@@ -83,7 +83,7 @@ class Validator {
         }
 
         foreach ($data as $key => $value) {
-            if ($valueIsCollection = is_int($key) || isset($validationConfigs[$key])) {
+            if (($valueIsCollection = is_int($key)) || isset($validationConfigs[$key])) {
                 $config = ($valueIsCollection) ? $validationConfigs : $validationConfigs[$key];
                 $this->apply($key, $value, $config, $validationKey);
             } else {
