@@ -251,9 +251,11 @@ class Dogpatch extends Curl {
         $validator->setValidators($validators);
 
         if (!$validator->isValid()) {
-            $errorMessage = 'Asserted body does not equal response body.' . PHP_EOL;
-            $errorMessage .= var_export($validator->getMessages(), true) . PHP_EOL;
-            $errorMessage .= '\n\n--------------- RESPONSE BODY ---------------\n' . var_export($body, true) . PHP_EOL;
+            $errorMessage =  PHP_EOL . PHP_EOL . '================= Asserted body does not equal response body. =================' . PHP_EOL;
+            $errorMessage .= print_r($validator->getMessages(), true) . PHP_EOL;
+            $errorMessage .= '===============================================================================' . PHP_EOL. PHP_EOL;
+            $errorMessage .= ':::::::::::::::::::::::::::::::: RESPONSE BODY ::::::::::::::::::::::::::::::::' . PHP_EOL . print_r($body, true) . PHP_EOL. PHP_EOL;
+            $errorMessage .= '===============================================================================' . PHP_EOL. PHP_EOL;
             throw new \Exception($errorMessage);
         }
 
